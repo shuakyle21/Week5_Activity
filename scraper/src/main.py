@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 import requests
 
 CACHE_DIR = Path(__file__).resolve().parent.parent / "cache"
+BASE_URL = "https://books.toscrape.com/catalogue/"
 USER_AGENT = "FlyRankInternshipA9/1.0 (+https://github.com/shuakyle21/Week5_Activity)"
 REQUEST_DELAY_SECONDS = 0.5
 TIMEOUT_SECONDS = 5
@@ -66,7 +67,7 @@ def slug_from_url(url: str) -> str:
 def main() -> None:
     ## Check if directory exists, else create new cache directory
     ensure_directory(CACHE_DIR)
-    fetch_page("https://books.toscrape.com/catalogue/page-1.html")
+    fetch_page(BASE_URL + "page-1.html")
 
 
 if __name__ == "__main__":
