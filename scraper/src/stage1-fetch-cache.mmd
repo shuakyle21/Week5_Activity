@@ -1,0 +1,14 @@
+flowchart TD
+    A[Start: fetch_catalogue_page] --> B{cache_path exists?}
+    B -- yes --> C[read_file cache_path]
+    C --> D["PRINT CACHE HIT (size)"]
+    D --> Z[Return html]
+
+    B -- no --> E["Build request headers\nUser-Agent: FlyRankInternshipA9/1.0"]
+    E --> F["http_get(url, headers, timeout=5s)"]
+    F --> G{status_code == 200?}
+    G -- no --> H["PRINT FETCH FAILED (status)"]
+    H --> I[Raise / skip - do NOT parse]
+    G -- yes --> J[write_file cache_path, response.body]
+    J --> K["PRINT FETCH (size)"]
+    K --> Z
