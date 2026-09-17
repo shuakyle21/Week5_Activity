@@ -3,6 +3,8 @@ from pathlib import Path
 import time
 from urllib.parse import urlparse
 import requests
+import hashlib
+
 
 CACHE_DIR = Path(__file__).resolve().parent.parent / "cache"
 BASE_URL = "https://books.toscrape.com/catalogue/"
@@ -27,7 +29,8 @@ def ensure_directory(path: str | Path) -> str | None:
 ## Fetch Page with agent
 def fetch_page(url: str) -> str:
     # Set the cache file name from the url
-    cache_file = os.path.join(CACHE_DIR, url) # Final file name
+    clean_str = slug_from_url(url)
+    cache_file = os.path.join(CACHE_DIR, clean_str) # Final file name
 
     # Check if cache hit or miss, read from disk
     try:
@@ -49,17 +52,7 @@ def fetch_page(url: str) -> str:
     time.sleep(0.5)
     return html
 
-import hashlib
-from urllib.parse import urlparse
-
-
 def slug_from_url(url: str) -> str:
-    """Derive a filesystem-safe cache key from a book detail page URL.
-
-    Used for Stage 3's 60 book detail pages, whose URLs are unpredictable.
-    Catalogue pages (Stage 1/2) don't need this - their filenames are built
-    directly from the known page number instead.
-    """
     parts = [p for p in urlparse(url).path.split("/") if p and p != "index.html"]
     return parts[-1] if parts else hashlib.md5(url.encode()).hexdigest()
 
