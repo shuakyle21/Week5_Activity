@@ -1,7 +1,52 @@
-"""The polite scraper - FlyRank W5 A9.
+import os
+from pathlib import Path
+import time
+from urllib.parse import urlparse
+import requests
 
-Stage 0: project skeleton. The pipeline is built up one stage at a time.
-"""
+CACHE_DIR = Path(__file__).resolve().parent.parent / "cache"
+USER_AGENT = "FlyRankInternshipA9/1.0 (+https://github.com/shuakyle21/Week5_Activity)"
+REQUEST_DELAY_SECONDS = 0.5
+TIMEOUT_SECONDS = 5
+
+
+## Check cache directory if exists, if not, create it
+def ensure_directory(path: str | Path) -> str | None:
+    # Create the directory if it doesn't exist; do nothing if it does.
+    if os.path.exists(path):
+        if not os.path.isdir(path):
+            raise FileExistsError(f"{path} exists but is not a directory")
+        print(f"Directory already exists: {path}")
+        return None
+    else:
+        os.makedirs(path)
+        return f"Created directory: {path}"
+
+
+## Fetch Page with agent
+def fetch_page(url: str) -> str:
+    # Set the cache file name from the url
+    cache_file = os.path.join(CACHE_DIR, url) # Final file name
+
+    # Check if cache hit or miss, read from disk
+    try:
+        with open(cache_file, "r") as f:
+            return f.read()
+    except FileNotFoundError:
+        # Request the page from network
+        response = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=TIMEOUT_SECONDS)
+        with open(cache_file, "w") as f:
+            f.write(response.text)
+
+        if response.status_code != 200:
+            raise RuntimeError(f"Failed to fetch page: {url}: HTTP {response.status_code}")
+        html = response.text
+
+    # Save the HTML to the cache directory
+    with open(cache_file, "w") as f:
+        f.write(html)
+    time.sleep(0.5)
+    return html
 
 import hashlib
 from urllib.parse import urlparse
@@ -19,7 +64,9 @@ def slug_from_url(url: str) -> str:
 
 
 def main() -> None:
-    print("polite scraper: stage 0 - target classified, see README.md")
+    ## Check if directory exists, else create new cache directory
+    ensure_directory(CACHE_DIR)
+    fetch_page("https://books.toscrape.com/catalogue/page-1.html")
 
 
 if __name__ == "__main__":

@@ -9,9 +9,9 @@ Target: https://books.toscrape.com/ (see `scraper/README.md` for Stage 0 classif
 - Commit: `Stage 0: classify scraping target`
 
 ## Stage 1 — Fetch once, cache once
-- [ ] Download catalogue page 1 with an honest `User-Agent` (e.g. `FlyRankInternshipA9/1.0 (+repo-link)`)
-- [ ] Set a request timeout
-- [ ] Check status code — only `200` proceeds
+- [x] Download catalogue page 1 with an honest `User-Agent` (e.g. `FlyRankInternshipA9/1.0 (+repo-link)`)
+- [x] Set a request timeout
+- [x] Check status code — only `200` proceeds
 - [ ] Save HTML to `cache/catalogue-page-1.html`; read from cache on subsequent runs
 - [ ] Checkpoint: run twice — first prints `FETCH` + creates file, second prints `CACHE HIT`; both report response size, neither dumps full HTML
 - Commit: `Stage 1: fetch and cache HTML`
