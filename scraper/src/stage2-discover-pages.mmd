@@ -1,0 +1,19 @@
+flowchart TD
+    A[Start: discover_catalogue_links start_url] --> B["url = start_url\npages_visited = 0\ndiscovered = []"]
+    B --> C["fetch_page(url)\n(Stage 1 cache/fetch + delay logic)"]
+    C --> D[pages_visited += 1]
+    D --> E["Parse HTML with BeautifulSoup"]
+    E --> F["Select every book link\non this page"]
+    F --> G["urljoin(url, href)\nfor each link -> absolute URL"]
+    G --> H["Append absolute links\nto discovered"]
+
+    H --> I{"'next' link\npresent on page?"}
+    I -- no --> L["Stop following"]
+    I -- yes --> J{"pages_visited < 3?"}
+    J -- no --> L
+    J -- yes --> K["url = urljoin(url, next_href)"]
+    K --> C
+
+    L --> M["unique_urls = de-duplicate(discovered)\n(preserve first-seen order)"]
+    M --> N["PRINT catalogue_pages=pages_visited\nPRINT discovered=len(discovered)\nPRINT unique_urls=len(unique_urls)"]
+    N --> Z[Return unique_urls]
