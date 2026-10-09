@@ -2,3 +2,15 @@
 .venv/
 .idea/
 .claude/
+
+## cache folder
+scraper/cache/
+
+## python artifacts
+__pycache__/
+*.pyc
+
+## non commit files
+TODO.md
+scraper/src/stage1-fetch-cache.mmd
+scraper/src/stage2-discover-pages.mmd
