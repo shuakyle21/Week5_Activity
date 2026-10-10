@@ -10,12 +10,53 @@ from typing import Any
 import requests
 from bs4 import BeautifulSoup
 
+import re
+from pydantic import BaseModel, field_validator
+
 CACHE_DIR = Path(__file__).resolve().parent.parent / "cache"
 BASE_URL = "https://books.toscrape.com/catalogue"
 USER_AGENT = "FlyRankInternshipA9/1.0 (+https://github.com/shuakyle21/Week5_Activity)"
 REQUEST_DELAY_SECONDS = 0.5
 TIMEOUT_SECONDS = 5
 
+## SET OUTPUT DIRECTORY
+OUTPUT_DIR = Path(__file__).resolve().parent.parent / "output"
+BOOKS_FILE = OUTPUT_DIR / "books.json"
+ERRORS_FILE = OUTPUT_DIR / "errors.json"
+CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+def normalize_price(price_text: str | None) -> float:
+    if not price_text:
+        raise ValueError("price_text is missing")
+
+    cleaned = price_text.strip()
+    cleaned = cleaned.replace("£", "").replace(",", "")
+
+    if not re.fullmatch(r"\d+(?:\.\d{1,2})?", cleaned):
+        raise ValueError(f"invalid price: {price_text!r}")
+
+    return float(cleaned)
+
+## BOOK MODEL
+class Book(BaseModel):
+    title: str
+    product_url: str
+    price_text: str
+    availability_text: str
+    rating_text: str
+    description: str | None
+    source_page: str
+    fetched_at: datetime
+    price_gbp : float
+
+    @field_validator("product_url")
+    @classmethod
+    def validate_product_url(cls, value: str) -> str:
+        parsed = urlparse(value)
+
+        if parsed.scheme != "https" or not parsed.netloc:
+            raise ValueError("product_url must be an absolute HTTPS URL")
+        return value
 
 ## Check cache directory if exists, if not, create it
 def ensure_directory(path: str | Path) -> str | None:
@@ -144,6 +185,47 @@ def extract_book_details(
     }
 
 
+def clean_data(records_list: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Clean the data in the record list."""
+    ensure_directory(OUTPUT_DIR)
+
+    valid_records = []
+    errors = []
+
+    for raw_record in records_list:
+        try:
+            normalized_record = {
+                **raw_record,
+                "price_gbp": normalize_price(raw_record.get("price_text")),
+            }
+
+            book = Book.model_validate(normalized_record)
+            valid_records.append(book.model_dump(mode="json"))
+        except (ValueError) as e:
+            errors.append({
+                "product_url": raw_record.get("product_url"),
+                "reason": str(e),
+            })
+
+    unique_records = {
+        record["product_url"]: record
+        for record in valid_records
+    }
+
+    books = list(unique_records.values())
+
+    BOOKS_FILE.write_text(
+        json.dumps(books, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    ERRORS_FILE.write_text(
+        json.dumps(errors, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    return books
+
 def main() -> None:
     ## Current url
     current_page_url = BASE_URL + "/page-1.html"
@@ -164,6 +246,9 @@ def main() -> None:
         print(json.dumps(records[0], indent=2, ensure_ascii=False))
     else:
         print("raw_record = None")
+
+    books = clean_data(records)
+    print(f"CHECKPOINT: books.json records = {len(books)}")
 
 if __name__ == "__main__":
     main()
