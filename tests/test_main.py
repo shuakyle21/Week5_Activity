@@ -27,6 +27,7 @@ class DiscoverCataloguePagesTests(unittest.TestCase):
         discover.assert_called_once_with(
             page_url,
             page_html,
+            {"pages_fetched": 0, "cache_hits": 0},
         )
 
     def test_report_prints_one_full_raw_record(self):
