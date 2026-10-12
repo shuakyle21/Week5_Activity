@@ -5,6 +5,8 @@
 
 ## cache folder
 scraper/cache/
+scraper/output/*
+!scraper/output/books.json
 
 ## python artifacts
 __pycache__/
