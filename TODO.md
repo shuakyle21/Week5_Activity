@@ -1,7 +1,7 @@
 # TODO — Week 5 (A9: The polite scraper)
 
 Lane: Python 3.10+ · Requests · Beautiful Soup · Pydantic
-Target: https://books.toscrape.com/ (see `scraper/README.md` for Stage 0 classification, already done)
+Target: https://books.toscrape.com/ (see `README.md` for Stage 0 classification, already done)
 
 ## Stage 0 — Check before you collect ✅ done
 - [x] `scraper/` folder, README, `.gitignore`, `src/main.py`
@@ -13,40 +13,40 @@ Target: https://books.toscrape.com/ (see `scraper/README.md` for Stage 0 classif
 - [x] Set a request timeout
 - [x] Check status code — only `200` proceeds
 - [x] Save HTML to `cache/catalogue-page-1.html`; read from cache on subsequent runs
-- [ ] Checkpoint: run twice — first prints `FETCH` + creates file, second prints `CACHE HIT`; both report response size, neither dumps full HTML
+- [x] Checkpoint: run twice — first prints `FETCH` + creates file, second prints `CACHE HIT`; both report response size, neither dumps full HTML
 - Commit: `Stage 1: fetch and cache HTML`
 
-## Stage 2 — Find all three pages
-- [ ] Parse cached page with Beautiful Soup
-- [ ] Collect every book link on page 1, convert relative → absolute URLs via `urljoin` (never string concat)
-- [ ] Follow the site's own "next" link through page 2 → page 3, then stop
-- [ ] ≥500ms delay between real (non-cached) requests
-- [ ] De-duplicate links
-- [ ] Checkpoint: prints `catalogue_pages=3`, `discovered=60`, `unique_urls=60`; rerun matches, mostly from cache
-- Commit: `Stage 2: discover three catalogue pages`
+## Stage 2 — Find all three pages ✅ done
+- [x] Parse cached page with Beautiful Soup
+- [x] Collect every book link on page 1, convert relative → absolute URLs via `urljoin` (never string concat)
+- [x] Follow the site's own "next" link through page 2 → page 3, then stop
+- [x] ≥500ms delay between real (non-cached) requests
+- [x] De-duplicate links
+- [x] Checkpoint: prints `catalogue_pages=3`, `discovered=60`, `unique_urls=60`; rerun matches, mostly from cache
+- Commit: `Stage 2: discover three catalogue pages` (`91df9ce`)
 
-## Stage 3 — Extract the raw records
-- [ ] For each of the 60 book pages, fetch/cache with same politeness (user-agent, timeout, status check, delay)
-- [ ] Extract: `title`, `product_url`, `price_text`, `availability_text`, `rating_text`, `description`, `source_page`, `fetched_at`
-- [ ] Selectors scoped to the product area, not the whole doc
-- [ ] Missing description → `null` (never invented)
-- [ ] Checkpoint: print one full raw record (all 8 keys) + `detail_pages=60`
+## Stage 3 — Extract the raw records ✅ done
+- [x] For each of the 60 book pages, fetch/cache with same politeness (user-agent, timeout, status check, delay)
+- [x] Extract: `title`, `product_url`, `price_text`, `availability_text`, `rating_text`, `description`, `source_page`, `fetched_at`
+- [x] Selectors scoped to the product area, not the whole doc
+- [x] Missing description → `null` (never invented)
+- [x] Checkpoint: print one full raw record (all 8 keys) + `detail_pages=60`
 - Commit: `Stage 3: extract book details`
 
-## Stage 4 — Clean it, check it, store it
-- [ ] Normalize `price_text` → numeric `price_gbp`, keep raw text alongside
-- [ ] Use absolute `product_url` as canonical identity (de-dupe)
-- [ ] Define record schema with Pydantic (required fields, types, `description` optional)
-- [ ] Validate every record before storing; failures → `errors.json` with reason
-- [ ] Write valid records to `output/books.json`; rerun must stay at 60 (idempotent, not 120)
-- [ ] Checkpoint: exactly 60 records, all `price_gbp` numeric, all URLs `https://`, stable after rerun
+## Stage 4 — Clean it, check it, store it ✅ done
+- [x] Normalize `price_text` → numeric `price_gbp`, keep raw text alongside
+- [x] Use absolute `product_url` as canonical identity (de-dupe)
+- [x] Define record schema with Pydantic (required fields, types, `description` optional)
+- [x] Validate every record before storing; failures → `errors.json` with reason
+- [x] Write valid records to `output/books.json`; rerun must stay at 60 (idempotent, not 120)
+- [x] Checkpoint: exactly 60 records, all `price_gbp` numeric, all URLs `https://`, stable after rerun
 - Commit: `Stage 4: validate normalized records`
 
-## Stage 5 — One bad page must not kill the run
-- [ ] Handle each page independently — one failure logged & skipped, doesn't stop the run
-- [ ] Retry once on timeout/5xx; never retry 404 or 403
-- [ ] Write `output/run-report.json`: start time, duration, pages fetched, cache hits, valid/invalid records, failed pages
-- [ ] Prove it: add one deliberately fake book URL, rerun, confirm `books.json` still has 60 good records and `run-report.json` shows `failed_pages: 1`
+## Stage 5 — One bad page must not kill the run ✅ done
+- [x] Handle each page independently — one failure logged & skipped, doesn't stop the run
+- [x] Retry once on timeout/5xx; never retry 404 or 403
+- [x] Write `output/run-report.json`: start time, duration, pages fetched, cache hits, valid/invalid records, failed pages
+- [x] Prove it: add one deliberately fake book URL, rerun, confirm `books.json` still has 60 good records and `run-report.json` shows `failed_pages: 1`
 - Commit: `Stage 5: survive failures, report the run`
 
 ## Stage 6 — Publish the evidence (required)
