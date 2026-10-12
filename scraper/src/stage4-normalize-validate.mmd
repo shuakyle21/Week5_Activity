@@ -1,0 +1,18 @@
+flowchart TD
+    A["START: normalize + validate + store\nStage 3 done: 60 raw records"] --> B["normalize_price price_text -> price_gbp\nstrip £ sign and currency symbol\nfloat of remaining number"]
+    B --> C["Keep raw price_text alongside\ncleaned value side by side for provenance"]
+    C --> D["product_url already absolute\nuse it as canonical identity\nno re-conversion needed"]
+    D --> E["Build Pydantic model\nBook with all 8 raw fields + price_gbp"]
+    E --> F{"Does record pass\nschema validation?"}
+    F -- "yes: valid" --> G["Append valid record to output list"]
+    F -- "no: invalid" --> H["Append to errors.json\nwith reason + product_url"]
+    G --> I{"More records left?"}
+    H --> I
+    I -- "yes: next book" --> E
+    I -- "no: all 60 processed" --> J["De-dupe output by canonical\nproduct_url identity"]
+    J --> K{"Did we store a record\nwith this URL before?"}
+    K -- "no: new identity" --> L["Write to books list"]
+    K -- "yes: already stored" --> M["Skip duplicate\nrerun stays at 60, not 120"]
+    L --> N["Write output/books.json\nidempotent, stable across reruns"]
+    M --> N
+    N --> Z["CHECKPOINT / REPORT\nexactly 60 records\nall price_gbp numeric\nall URLs https://\nstable after rerun"]
