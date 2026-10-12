@@ -214,7 +214,7 @@ The scraper produces the following artifacts:
 
 | File                             | Purpose                                               |
 | -------------------------------- | ----------------------------------------------------- |
-| `scraper/cache/`                 | Stores cached HTML responses for reuse                |
+| `scraper/cache`                 | Stores cached HTML responses for reuse                |
 | `scraper/output/books.json`      | Contains validated and deduplicated book records      |
 | `scraper/output/errors.json`     | Contains invalid records and validation reasons       |
 | `scraper/output/run-report.json` | Contains execution statistics and failed-page details |
