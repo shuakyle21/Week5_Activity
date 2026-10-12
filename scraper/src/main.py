@@ -18,7 +18,7 @@ from pydantic import BaseModel, field_validator
 # and how slowly we go. Change scope or politeness here, nowhere else.
 CACHE_DIR = Path(__file__).resolve().parent.parent / "cache"
 BASE_URL = "https://books.toscrape.com/catalogue"
-USER_AGENT = "FlyRankInternshipA9/1.0 (+https://github.com/shuakyle21/Week5_Activity)"
+USER_AGENT = "FlyRankInternshipA9/1.0 (+https://github.com/shuakyle21/the-polite-scraper)"
 REQUEST_DELAY_SECONDS = 0.5
 TIMEOUT_SECONDS = 5
 RETRY_WAIT_SECONDS = 1.0

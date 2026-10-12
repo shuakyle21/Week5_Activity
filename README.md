@@ -66,6 +66,8 @@ Books to Scrape describes itself as a fictional bookstore designed for practicin
 
 On **September 5, 2026**, a request to `https://books.toscrape.com/robots.txt` returned HTTP `404 Not Found`. No robots.txt file was available at the time of that check. The absence of this file is not, by itself, authorization; the target's stated purpose and applicable site policies must also be considered.
 
+I will not reuse this code on another site without checking its rules and terms first.
+
 ### Data Collection Scope
 
 Each book record contains the following information:
@@ -235,7 +237,7 @@ The scraper applies the following controls to real network requests:
 
 | Control                | Implementation                                                   |
 | ---------------------- | ---------------------------------------------------------------- |
-| User-Agent             | `FlyRankInternshipA9/1.0 (+repo-link)`                           |
+| User-Agent             | `FlyRankInternshipA9/1.0 (+https://github.com/shuakyle21/the-polite-scraper)` |
 | Request timeout        | 5 seconds                                                        |
 | Inter-request delay    | At least 500 milliseconds                                        |
 | HTTP status validation | Only HTTP `200 OK` responses proceed to parsing                  |
@@ -246,8 +248,6 @@ The scraper applies the following controls to real network requests:
 The User-Agent is configured through `USER_AGENT`, the timeout through `TIMEOUT_SECONDS`, and the request delay through `REQUEST_DELAY_SECONDS` in `scraper/src/main.py`.
 
 Only real network requests incur the configured request delay; cache reads do not.
-
-Replace `+repo-link` with the actual repository URL when preparing the project for external review or deployment.
 
 ## Error Handling and Resilience
 
@@ -287,8 +287,8 @@ The following report is from a completed run in which all 63 pages were served f
 
 ```json
 {
-  "start_time": "2026-10-12T08:39:41.543618+00:00",
-  "duration_seconds": 1.68,
+  "start_time": "2026-10-12T09:07:44.464786+00:00",
+  "duration_seconds": 1.13,
   "catalogue_pages": 3,
   "detail_pages_attempted": 60,
   "pages_fetched": 0,
