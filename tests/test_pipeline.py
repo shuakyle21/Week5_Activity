@@ -121,15 +121,35 @@ def test_fetch_retries_transient_once(monkeypatch, config, tmp_path):
 def test_fetch_never_retries_client_errors(monkeypatch, config):
     config.ensure_dirs()
     calls = {"n": 0}
+    sleeps = []
 
     def fake_get(url, headers=None, timeout=None):
         calls["n"] += 1
         return FakeResponse(status_code=404)
 
     monkeypatch.setattr(fetch.requests, "get", fake_get)
-    with pytest.raises(TerminalFetchError):
+    monkeypatch.setattr(fetch.time, "sleep", lambda s: sleeps.append(s))
+    with pytest.raises(TerminalFetchError) as exc:
         fetch.fetch_page("https://example.test/missing", config)
     assert calls["n"] == 1
+    assert exc.value.status_code == 404
+    assert sleeps == [config.request_delay_seconds]
+
+
+def test_fetch_cache_key_uses_full_url(monkeypatch, config):
+    config.ensure_dirs()
+    calls = {"n": 0}
+
+    def fake_get(url, headers=None, timeout=None):
+        calls["n"] += 1
+        return FakeResponse("<html></html>")
+
+    monkeypatch.setattr(fetch.requests, "get", fake_get)
+    monkeypatch.setattr(fetch.time, "sleep", lambda s: None)
+    fetch.fetch_page("https://example.test/catalogue/item?a=1", config)
+    fetch.fetch_page("https://example.test/catalogue/item?a=2", config)
+    assert calls["n"] == 2
+    assert len(list(config.cache_dir.glob("catalogue-*"))) == 2
 
 
 def test_clean_data_dedupes_and_splits_errors(config):
@@ -156,3 +176,31 @@ def test_cli_parses_flags():
 
     ns = build_parser().parse_args(["--pages", "2", "--no-cache", "--delay", "0"])
     assert ns.pages == 2 and ns.no_cache is True and ns.delay == 0
+
+
+def test_pipeline_stops_on_403_detail_page(monkeypatch, config):
+    monkeypatch.setattr(
+        pipeline, "fetch_page", lambda url, cfg, stats=None: ("<html></html>", False)
+    )
+    monkeypatch.setattr(
+        pipeline,
+        "discover_catalogue_pages",
+        lambda first_url, html, cfg, stats=None: (
+            {"https://example.test/a", "https://example.test/b"},
+            {},
+        ),
+    )
+
+    calls = {"n": 0}
+
+    def fake_extract(url, source, cfg, stats=None):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise TerminalFetchError("HTTP 403, never retry", status_code=403)
+        return {}
+
+    monkeypatch.setattr(pipeline, "extract_book_details", fake_extract)
+
+    with pytest.raises(TerminalFetchError):
+        pipeline.run(config)
+    assert calls["n"] == 1

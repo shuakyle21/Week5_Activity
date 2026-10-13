@@ -65,7 +65,16 @@ def run(config: ScraperConfig) -> dict[str, Any]:
                     product_url, source_page_map.get(product_url), config, stats
                 )
             )
-        except (RetryableFetchError, TerminalFetchError, ValueError) as e:
+        except TerminalFetchError as e:
+            if e.status_code == 403:
+                logger.error("STOP %s: %s", product_url, e)
+                raise
+            failed_pages.append({
+                "product_url": product_url,
+                "reason": f"{type(e).__name__}: {e}",
+            })
+            logger.warning("SKIP %s: %s", product_url, e)
+        except (RetryableFetchError, ValueError) as e:
             failed_pages.append({
                 "product_url": product_url,
                 "reason": f"{type(e).__name__}: {e}",

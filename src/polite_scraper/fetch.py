@@ -5,7 +5,6 @@ later runs (no network, no delay)."""
 import hashlib
 import logging
 import time
-from urllib.parse import unquote, urlparse
 
 import requests
 
@@ -13,12 +12,6 @@ from .config import ScraperConfig
 from .errors import RetryableFetchError, TerminalFetchError
 
 logger = logging.getLogger(__name__)
-
-
-def slug_from_url(url: str) -> str:
-    path = unquote(urlparse(url).path)
-    parts = [p for p in path.split("/") if p and p.lower() != "index.html"]
-    return parts[-1] if parts else hashlib.md5(url.encode()).hexdigest()
 
 
 def _request_once(url: str, config: ScraperConfig) -> requests.Response:
@@ -30,13 +23,15 @@ def _request_once(url: str, config: ScraperConfig) -> requests.Response:
         )
     except (requests.Timeout, requests.ConnectionError) as e:
         raise RetryableFetchError(f"Network failure: {url} ({e})") from e
+    finally:
+        time.sleep(config.request_delay_seconds)
 
 
 def fetch_page(
     url: str, config: ScraperConfig, stats: dict | None = None
 ) -> tuple[str, bool]:
     """Return (html, fetched_from_network). Updates stats counters in place."""
-    cache_file = config.cache_dir / f"catalogue-{slug_from_url(url)}"
+    cache_file = config.cache_dir / f"catalogue-{hashlib.sha256(url.encode()).hexdigest()}"
 
     if not config.no_cache and cache_file.exists():
         html = cache_file.read_text(encoding="utf-8")
@@ -55,7 +50,10 @@ def fetch_page(
 
     # Client errors: the server answered — asking again changes nothing.
     if 400 <= response.status_code < 500:
-        raise TerminalFetchError(f"HTTP {response.status_code}, never retry: {url}")
+        raise TerminalFetchError(
+            f"HTTP {response.status_code}, never retry: {url}",
+            status_code=response.status_code,
+        )
     # Server errors: outcome unclear, so exactly one retry, then give up.
     if response.status_code >= 500:
         logger.info("Server error %s, retrying once: %s", response.status_code, url)
@@ -66,7 +64,10 @@ def fetch_page(
                 f"Server error persists after retry: {url}: HTTP {response.status_code}"
             )
     if response.status_code != 200:
-        raise TerminalFetchError(f"HTTP {response.status_code}, never retry: {url}")
+        raise TerminalFetchError(
+            f"HTTP {response.status_code}, never retry: {url}",
+            status_code=response.status_code,
+        )
 
     # Server sends text/html without charset; page is UTF-8 (meta tag).
     # Force detection so text doesn't mojibake (Â£ instead of £).
@@ -75,7 +76,6 @@ def fetch_page(
 
     cache_file.write_text(html, encoding="utf-8")
     logger.info("FETCH: %s, size=%d", url, len(html))
-    time.sleep(config.request_delay_seconds)
     if stats is not None:
         stats["pages_fetched"] += 1
     return html, True
