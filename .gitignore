@@ -16,3 +16,9 @@ __pycache__/
 TODO.md
 scraper/src/stage1-fetch-cache.mmd
 scraper/src/stage2-discover-pages.mmd
+
+# runtime data (regenerated on every run)
+data/
+
+# assignment scaffolding (kept in history, not in the tree)
+*.pdf
